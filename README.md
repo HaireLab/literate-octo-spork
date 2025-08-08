@@ -1,2 +1,2 @@
 # literate-octo-spork
-Collaborative repo for pinons and salamander modeling in firebgc.
+Collaborative repo for pinon and salamander modeling in firebgc.
