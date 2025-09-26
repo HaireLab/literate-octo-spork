@@ -1,0 +1,118 @@
+---
+title: "JMS observed habitat"
+author: "S. Haire"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(terra)
+library(sf)
+library(dplyr)
+library(purrr)
+library(stringr)
+library(readr)
+files<-"./NMdata/outfiles/observed/"
+maps<-"./NMdata/outmaps/observed/"
+```
+
+## Background and strategy
+
+### Challenges of modeling JMS habitat 
+
+#### JMS have a known patchy distribution, even within mesic forest types in the Jemez, so we can't assume that all pixels within the zone of mesic forest constitute habitat. 
+
+### Strategy
+
+#### Buffer the point locations of actual salamander detections from the historical detection database and extract canopy cover, CWD, and other variables of interest from the 'contemporary' climate scenario/replicates. 
+
+#### Graph the results in geographic and data space to explore the distribution of habitat based on the simulation models. 
+
+### Step 1
+### Data prep
+#### Input table with variables and definitions
+#### Create a vector of IDs to match colnames in the stand.year table 
+#### Create a vector of names to assign to the columns in the stand.year table (deleted problematic characters and spaces)
+#### Create a list of all the stand.year files in all subfolders
+
+
+```{r dataprep}
+## input table with variables and definitions
+habv1<-read_csv("./data/output_vars_habitat.csv")
+## create a vector of IDs to match colnames in the stand.year table
+## these are the ones identified for habitat models
+varcols<-paste("VAR",habv1$ID, sep="")
+habv1$cname<-paste("VAR", habv1$ID, sep="")
+
+## create a list of all the stand.year files in all subfolders
+sysfiles<-list.files(path = files,recursive = TRUE, pattern = "stand.year", full.names = TRUE)
+## edited in vim to delete problem characters and spaces
+names_all<-c("Year","Site","Stand","Zone","NumPixel","VAR11","VAR12","VAR100",
+             "VAR102","VAR103","VAR107","VAR108","VAR109","VAR110","VAR111","VAR112",
+             "VAR113","VAR114","VAR115","VAR116","VAR250","VAR251","VAR252","VAR253",
+             "VAR255","VAR256","VAR257","VAR258","VAR259","VAR260","VAR261","VAR262",
+             "VAR263","VAR264","VAR267","VAR268","VAR269","VAR270","VAR271","VAR485",
+             "VAR486","VAR487","VAR489","VAR490","VAR491","VAR650","VAR658","VAR660",
+             "VAR661","VAR664","VAR665","VAR682","VAR683","VAR722","VAR723","VAR724",
+             "VAR725","VAR729","VAR730","VAR731","VAR732","VAR733","VAR758","VAR760",
+             "VAR770","VAR771","VAR772","VAR773","VAR774","VAR775","VAR776","VAR777",
+             "VAR778","VAR801","VAR802","VAR803","VAR804","VAR805","VAR806","VAR807",
+             "VAR808","VAR809","VAR814","VAR815","VAR816")
+
+
+```
+
+### Step 2
+### Read in the data for the "observed" scenario replicates
+#### Select variables of interest
+#### Identify unique years across replicates
+#### List and read in all the rasters for the obs scenario; rename the rasters so they can be accessed more easily during subsequent processing steps
+
+
+```{r read_obs, echo=FALSE}
+## read in all the data in the first scenario
+############### these need to be named by obs #1-10 #####################
+listobs1_10 <- sysfiles[1:10] %>%
+  purrr::map(~read.table(., skip=1, col.names=names_all)) 
+## variables of interest
+v1<-"VAR485" # 485=CWD 1st run 
+#v2<-"VAR112" #112=CC
+varcols2<-c("Year", "Stand", v1)
+## this step converts the list to a dataframe and just keeps the
+## variables of interest
+x<- dplyr::bind_rows(listobs1_10) %>%
+  dplyr::select(all_of(varcols2))
+dim(x) # 876403 2
+unique(x$Year)
+#[1]   1  10  20  30  40  50  60  70  80  90 100 110 120 130 140 150
+#[17] 160 170 180 190 200 210 220 230 240 250 260 270 280 290 300
+## make year a factor
+x$Year = as.factor(x$Year)
+
+## list and read in all the rasters for the obs scenario
+listrasobs<-list.files(path = maps,recursive = TRUE, 
+          pattern = "poly.polyID.*.asc", full.names = TRUE)[1:60]
+## generate a list of names
+rasnames<-listrasobs %>% str_replace("./NMdata/outmaps/observed/", "") %>%
+  str_replace("/poly.polyID.", "_") %>% str_replace(".asc", "")
+
+## assign the abbrev names e.g., obs.1_100 to list of rasters
+rasdat <- listrasobs %>% purrr::map(~rast(.) ) %>% set_names(rasnames)
+
+```
+
+### Step 3
+### Map the habitat variables onto each observed scenario replicate
+#### Output a map for each variable, then apply criteria to output a map that represents locations where salamanders were observed in the field (10 replicates)
+#### Either calculate the e.g., mean for the variable maps, or combine the 10 maps after applying filter?
+
+```{r map_values}
+## select the rasters by year and map the values for cwd onto each raster
+## start with *_50
+grx<-glob2rx("*_50")
+grep(grx, rasnames)
+
+## select the stand.year data for year 50
+head(x %>% dplyr::filter(Year==50))
+```
