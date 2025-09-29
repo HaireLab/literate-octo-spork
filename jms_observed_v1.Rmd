@@ -25,9 +25,13 @@ maps<-"./NMdata/outmaps/observed/"
 
 ### Strategy
 
-#### Buffer the point locations of actual salamander detections from the historical detection database and extract canopy cover, CWD, and other variables of interest from the 'contemporary' climate scenario/replicates. 
+#### Buffer the point locations of actual salamander detections from the historical detection database and extract canopy cover, CWD, and other variables of interest from the 'contemporary' climate scenario/replicates. These variables will form the set of predictors for modeling. A separate model will be constructed for each simulation year, across replicats.
 
-#### Graph the results in geographic and data space to explore the distribution of habitat based on the simulation models. 
+### There is an exploratory step here, in which we graph the distribution of variables within the buffers....
+
+#### The locations within the buffers represent presence. A set of random points represent absence. Using these data, we can model predicted probabilities for JMS and then generate spatial predictions for the Jemez landscape. 
+
+#### Graph the results of the spatial predictions in geographic space to explore the distribution of habitat based on the models. 
 
 ### Step 1
 ### Data prep
@@ -103,11 +107,11 @@ rasdat <- listrasobs %>% purrr::map(~rast(.) ) %>% set_names(rasnames)
 ```
 
 ### Step 3
-### Map the habitat variables onto each observed scenario replicate
-#### Output a map for each variable, then apply criteria to output a map that represents locations where salamanders were observed in the field (10 replicates)
-#### Either calculate the e.g., mean for the variable maps, or combine the 10 maps after applying filter?
+### Construct a dataset for predictive models
+#### Extract values from the point buffers and combine across the 10 replicates for each year.Add a set of random points outside the buffers for modeling.  
 
-```{r map_values}
+```{r assemble_data}
+################# just notes so far ####################
 ## select the rasters by year and map the values for cwd onto each raster
 ## start with *_50
 grx<-glob2rx("*_50")
@@ -116,3 +120,36 @@ grep(grx, rasnames)
 ## select the stand.year data for year 50
 head(x %>% dplyr::filter(Year==50))
 ```
+
+### Step 4
+### Construct predictive models
+#### Use generalized boosted regression to predict probability of occurrence for each year. 
+
+
+```{r randompt_models}
+################# just notes so far ####################
+## select the rasters by year and map the values for cwd onto each raster
+## start with *_50
+grx<-glob2rx("*_50")
+grep(grx, rasnames)
+
+## select the stand.year data for year 50
+head(x %>% dplyr::filter(Year==50))
+```
+
+### Step 5
+### Quantify spatial patterns of habitat
+
+
+```{r habitat_spatial}
+
+```
+
+### Step 6
+### Quantify habitat parameters in data space
+
+
+```{r habitat_dataspace}
+
+```
+
