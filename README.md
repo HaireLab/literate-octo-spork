@@ -5,6 +5,6 @@
 
 ### Files so far:
 
-purpose & algorithm.pptx: first try
+### purpose & algorithm.pptx: first try
 
-jms_observed_v1.RMD: mostly data wrangling to get things ready for modeling but set up to include the bigger process after all data are available.
+### jms_observed_v1.RMD: mostly data wrangling to get things ready for modeling but set up to include the bigger process after all data are available.
